@@ -13,7 +13,7 @@ body {
 }
 
 input {
-  background: grey;
+  background: rgba(128, 128, 255, 0.5);
   font-size: 18px;
 }
 
@@ -49,5 +49,5 @@ form {
 }
 
  .container {
-  background-color: rgba(240, 60, 60, 0.8);
+  background-color: aquamarine;
 }
