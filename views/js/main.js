@@ -541,38 +541,48 @@ var pizzanum = rows * cols;
 
 
 // Moves the sliding background pizzas based on scroll position
+window.addEventListener('scroll', animationReadyCheck);
+
+function animationReadyCheck() {
+  if (!window.animating) {
+    window.requestAnimationFrame(updatePositions);
+    window.animating = true;
+  }
+}
+
 function updatePositions() {
-  frame++;
-  window.performance.mark("mark_start_frame");
+// This is the function which moves the background pizzas while the user is scrolling
 
-  // I moved these variables out of the for loop since they are constants.  I also
-  // changed document.querySelectorAll to document.getElementsByClassName to increase efficiency.
-  // In style.css, I added two transform properties to the background pizzas so that they are on their own layer.
-  var items = document.getElementsByClassName('mover');
-  var i = 0;
-  var sine = (document.body.scrollTop / 1250);
-
-  //I replaced items.length with the number of pizzas generated because it stays constant.
-  for (; i < pizzanum; i++) {
-    var phase = Math.sin(sine + (i % 5));
-    items[i].style.left = items[i].basicLeft + 100 * phase + 'px';
+  var top, constArray, numPizzas, i, phase;
+  window.frame++;
+  window.performance.mark('mark_start_frame');
+  top = (document.body.scrollTop / 1250);
+  constArray = [];
+  for (i = 0; i < 5; i++) {
+    constArray.push(Math.sin(top + i));
   }
 
+  numPizzas = window.items.length;
 
-  // User Timing API to the rescue again. Seriously, it's worth learning.
-  // Super easy to create custom metrics.
-  window.performance.mark("mark_end_frame");
-  window.performance.measure("measure_frame_duration", "mark_start_frame", "mark_end_frame");
+  for (i = 0; i < numPizzas; i++) {
+    phase = constArray[i % 5];
+    // phase = Math.sin((document.body.scrollTop / 1250) + (i % 5));
+    // items[i].style.left = items[i].basicLeft + 100 * phase + 'px';
+    // items[i].style.transform = 'translateX(' + (100 * phase) + 'px)';
+    window.items[i].style.transform = 'translate3d(' + (100 * phase) + 'px, 0, 0)';
+  }
+
+  window.animating = false;
+  window.performance.mark('mark_end_frame');
+  window.performance.measure('measure_frame_duration', 'mark_start_frame', 'mark_end_frame');
   if (frame % 10 === 0) {
-    var timesToUpdatePosition = window.performance.getEntriesByName("measure_frame_duration");
+    var timesToUpdatePosition = window.performance.getEntriesByName('measure_frame_duration');
     logAverageFrame(timesToUpdatePosition);
   }
 }
 
-
 // runs updatePositions on scroll
 window.addEventListener('scroll', updatePositions);
-
 
 // Generates the sliding pizzas when the page loads.
 document.addEventListener('DOMContentLoaded', function() {
