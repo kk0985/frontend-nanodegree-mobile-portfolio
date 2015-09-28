@@ -448,12 +448,15 @@ var resizePizzas = function(size) {
     return dx;
   }
 
-  // Iterates through pizza elements on the page and changes their widths
-  function changePizzaSizes(size) {
-    for (var i = 0; i < document.querySelectorAll(".randomPizzaContainer").length; i++) {
-      var dx = determineDx(document.querySelectorAll(".randomPizzaContainer")[i], size);
+  var dx = determineDx(document.querySelectorAll(".randomPizzaContainer")[i], size);
       var newwidth = (document.querySelectorAll(".randomPizzaContainer")[i].offsetWidth + dx) + 'px';
       document.querySelectorAll(".randomPizzaContainer")[i].style.width = newwidth;
+
+  // Iterates through pizza elements on the page and changes their widths
+  function changePizzaSizes(size) {
+    for (var i = 2; i < 100; i++) {
+      var pizzasDiv = document.getElementById("randomPizzas");
+      pizzasDiv.appendChild(pizzaElementGenerator(i));
     }
   }
 
@@ -469,11 +472,10 @@ var resizePizzas = function(size) {
 window.performance.mark("mark_start_generating"); // collect timing data
 
 // This for-loop actually creates and appends all of the pizzas when the page loads
-// moved variable outside of the loop to prevent it from recalling it when not needed
-var pizzasDiv = document.getElementById("randomPizzas");
-for (var i = 2; i < 100; i++) {
-  pizzasDiv.appendChild(pizzaElementGenerator(i));
-}
+    for (var i = 2; i < 100; i++) {
+      var pizzasDiv = document.getElementById("randomPizzas");
+      pizzasDiv.appendChild(pizzaElementGenerator(i));
+    }
 
 // User Timing API again. These measurements tell you how long it took to generate the initial pizzas
 window.performance.mark("mark_end_generating");
@@ -495,56 +497,73 @@ function logAverageFrame(times) {   // times is the array of User Timing measure
   console.log("Average time to generate last 10 frames: " + sum / 10 + "ms");
 }
 
-// The following code for sliding background pizzas was pulled from Ilya's demo found at:
-// https://www.igvita.com/slides/2012/devtools-tips-and-tricks/jank-demo.html
+// implemented requestAnimationFrame as seen on http://www.html5rocks.com/en/tutorials/speed/animations/
+// declare variable for known scroll position
+var latestKnownScrollY = 0,
+ticking = false;
+
+// Callback for scroll event
+function onScroll() {
+  latestKnownScrollY = window.scrollY;
+  requestTick();
+}
+
+// calls requestAnimationFrame
+function requestTick() {
+  if(ticking) {
+    window.requestAnimationFrame(updatePositions);
+      console.log('ticking is true');
+  }
+  ticking = true;
+}
 
 // Moves the sliding background pizzas based on scroll position
 function updatePositions() {
-frame++;
-window.performance.mark("mark_start_frame");
-//Optimized by using getElementsByClassName
-var items = document.getElementsByClassName('mover');
-scrollVar = document.body.scrollTop/1250;
-phasesArray = [];
+  frame++;
+  window.performance.mark("mark_start_frame");
+    //creat var yZ to remove one computation out of for loop
+    var yZ = latestKnownScrollY / 1250;
+    for (var i = 0; i < items.length; i++) {
+    var phase = Math.sin(yZ + (i % 5));
+    window.items[i].style.transform = 'translateX(' + (100*phase) + 'px)';
+    // changed above items[i].style.left to transform and translate to improve FPS
+    // learned the benifits from http://www.paulirish.com/2012/why-moving-elements-with-translate-is-better-than-posabs-topleft/
+  }
 
-for (var i = 0; i < 5; i++){
-phasesArray.push(Math.sin(scrollVar + (i % 5)));
+  // User Timing API to the rescue again. Seriously, it's worth learning.
+  // Super easy to create custom metrics.
+  window.performance.mark("mark_end_frame");
+  window.performance.measure("measure_frame_duration", "mark_start_frame", "mark_end_frame");
+  if (frame % 10 === 0) {
+    var timesToUpdatePosition = window.performance.getEntriesByName("measure_frame_duration");
+    logAverageFrame(timesToUpdatePosition);
+  }
+   window.ticking = false;
 }
 
-for (var i = 0; i < items.length ; i++) {
-var movePizza = items[i].basicLeft + 1500 * phasesArray[i % 5] + 'px';
-//Apply CSS3 hack
-items[i].style.webkitTransform = "translateX("+ movePizza +")translateZ(0)";
-}
+// runs requestAnimationFrame(updatePositions) on scroll
+window.addEventListener('scroll', onScroll, false);
 
-window.performance.mark("mark_end_frame");
-window.performance.measure("measure_frame_duration", "mark_start_frame", "mark_end_frame");
-if (frame % 10 === 0) {
-var timesToUpdatePosition = window.performance.getEntriesByName("measure_frame_duration");
-logAverageFrame(timesToUpdatePosition);
-}
-}
+// removed document.querySelector("#movingPizzas1") from the event listener function and into its own variable
+mPizzas = document.querySelector("#movingPizzas1");
 
-// runs updatePositions on scroll
-window.addEventListener('scroll', updatePositions);
 // Generates the sliding pizzas when the page loads.
+document.addEventListener('DOMContentLoaded', window.requestAnimationFrame(function() {
+  var cols = 8;
+  var s = 256;
+  for (var i = 0; i < 100; i++) {
+    var elem = document.createElement('img');
+    elem.className = 'mover';
+    elem.src = "images/pizza.png";
+    elem.style.height = "100px";
+    elem.style.width = "73.333px";
+    // setting the intial position of the pizzas with elem.style.left
+    elem.style.left = (i % cols) * s + 'px';
+    elem.style.top = (Math.floor(i / cols) * s) + 'px';
+    mPizzas.appendChild(elem);
+  }
 
-document.addEventListener('DOMContentLoaded', function() {
-var cols = 8;
-var s = 256;
-
-//Optimizd by changing frames to 50
-for (var i = 0; i < 50; i++) {
-var elem = document.createElement('img');
-elem.className = 'mover';
-//Optimized by stoping to resize all pizzas
-elem.src = "images/pizza.png";
-elem.style.height = "100px";
-elem.style.width = "73.333px";
-elem.basicLeft = (i % cols) * s;
-elem.style.top = (Math.floor(i / cols) * s) + 'px';
-//Optimized by using getElementById
-document.getElementById("movingPizzas1").appendChild(elem);
-}
-updatePositions();
-});
+  // moved the items variable declaration down here to make it available globally
+  window.items = document.querySelectorAll('.mover');
+  window.requestAnimationFrame(updatePositions);
+}));
