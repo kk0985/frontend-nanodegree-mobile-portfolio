@@ -24,6 +24,8 @@ Optimization Testing
 		* added will-change: transform and transform: translateZ(0) to .mover
 	- changes made to views/images/pizzeria.jpeg
 	    * compressed and resized to 64KB from 2.3MB
+
+3) Optimized css/style.css using CSS Beautifier at html.fwpolice.com/css
 ==================================
 
 
