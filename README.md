@@ -26,6 +26,8 @@ Optimization Testing
 	    * compressed and resized to 64KB from 2.3MB
 
 3) Optimized css/style.css using CSS Beautifier at html.fwpolice.com/css
+
+4) Optimized index.html and pizza.html using Format HTML for Free at www.cleancss.com/html-beautify/
 ==================================
 
 
