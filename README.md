@@ -30,7 +30,8 @@ Optimization Testing
 4) Optimized index.html and pizza.html using Format HTML for Free at www.cleancss.com/html-beautify/
 ==================================
 
-
+How to run the app:
+	open index.html in your browser
 
 Your challenge, if you wish to accept it (and we sure hope you will), is to optimize this online portfolio for speed! In particular, optimize the critical rendering path and make this page render as quickly as possible by applying the techniques you've picked up in the [Critical Rendering Path course](https://www.udacity.com/course/ud884).
 
