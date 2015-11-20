@@ -124,7 +124,7 @@ footer span {
 /* Smartphones (portrait) */
 @media only screen and (max-width: 480px) {
   body {
-    font-size: 12px;
+    font-size: 16px;
   }
 
   header p {
